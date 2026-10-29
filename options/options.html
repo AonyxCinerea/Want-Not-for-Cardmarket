@@ -1,0 +1,50 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Want-Not Settings</title>
+<link rel="stylesheet" href="options.css">
+</head>
+<body>
+  <header>
+    <h1>Want-Not</h1>
+    <span id="saved" class="muted"></span>
+  </header>
+
+  <section>
+    <h2>Universes Beyond presets</h2>
+    <div id="presets" class="grid"></div>
+  </section>
+
+  <section>
+    <h2>Custom patterns</h2>
+    <p class="muted">Case-insensitive part of an expansion name, or <code>re:</code> + regular expression.</p>
+    <form id="addPattern" class="row">
+      <input id="patternInput" placeholder='e.g. "Secret Lair" or re:^Commander:' autocomplete="off">
+      <button>Add</button>
+    </form>
+    <div id="patternError" class="error"></div>
+    <ul id="patterns" class="chips"></ul>
+  </section>
+
+  <section>
+    <h2>Expansions</h2>
+    <p class="muted">Tick individual expansions to exclude them. The list fills up as you analyze wants lists.</p>
+    <div class="row">
+      <input id="search" type="search" placeholder="Search expansions" autocomplete="off">
+      <label class="inline"><input id="onlyBlocked" type="checkbox"> blocked only</label>
+    </div>
+    <div id="expCount" class="muted small"></div>
+    <ul id="expansions" class="explist"></ul>
+  </section>
+
+  <section>
+    <h2>Behaviour</h2>
+    <label class="inline"><input id="cleanExplicit" type="checkbox">
+      Also remove blocked expansions from entries where you picked specific expansions</label>
+  </section>
+
+  <script src="../src/blocklist.js"></script>
+  <script src="options.js"></script>
+</body>
+</html>

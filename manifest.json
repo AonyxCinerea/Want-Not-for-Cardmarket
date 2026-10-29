@@ -1,0 +1,61 @@
+{
+  "manifest_version": 3,
+  "name": "Want-Not for Cardmarket",
+  "short_name": "Want-Not",
+  "version": "0.3.0",
+  "description": "Exclude unwanted expansions (e.g. Marvel or TMNT printings) from every card on your Cardmarket wants lists.",
+  "icons": {
+    "16": "icons/icon-16.png",
+    "32": "icons/icon-32.png",
+    "48": "icons/icon-48.png",
+    "128": "icons/icon-128.png"
+  },
+  "permissions": [
+    "storage"
+  ],
+  "host_permissions": [
+    "https://www.cardmarket.com/*",
+    "https://api.scryfall.com/*"
+  ],
+  "background": {
+    "service_worker": "src/background.js",
+    "scripts": [
+      "src/background.js"
+    ]
+  },
+  "action": {
+    "default_popup": "options/options.html",
+    "default_title": "Want-Not settings",
+    "default_icon": {
+      "16": "icons/icon-16.png",
+      "32": "icons/icon-32.png"
+    }
+  },
+  "options_ui": {
+    "page": "options/options.html",
+    "open_in_tab": true
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.cardmarket.com/*/Magic/Wants/*"
+      ],
+      "js": [
+        "src/blocklist.js",
+        "src/selection.js",
+        "src/parse.js",
+        "src/content.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
+    }
+  ],
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "want-not@ldawert.de",
+      "strict_min_version": "121.0"
+    }
+  }
+}
