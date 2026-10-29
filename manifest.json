@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Want-Not for Cardmarket",
   "short_name": "Want-Not",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "Exclude unwanted expansions (e.g. Marvel or TMNT printings) from every card on your Cardmarket wants lists.",
   "icons": {
     "16": "icons/icon-16.png",
@@ -54,8 +54,13 @@
   ],
   "browser_specific_settings": {
     "gecko": {
-      "id": "want-not@ldawert.de",
-      "strict_min_version": "121.0"
+      "id": "want-not@aonyxcinerea",
+      "strict_min_version": "140.0",
+      "data_collection_permissions": {
+        "required": [
+          "none"
+        ]
+      }
     }
   }
 }

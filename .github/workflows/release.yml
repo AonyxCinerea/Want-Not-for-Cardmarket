@@ -26,6 +26,10 @@ jobs:
           fi
       - name: Build
         run: echo "ZIP=$(./scripts/build.sh)" >> "$GITHUB_ENV"
+      - name: Lint package (Mozilla web-ext)
+        run: |
+          mkdir -p dist/ext && unzip -q dist/*.zip -d dist/ext
+          npx --yes web-ext@8 lint --source-dir dist/ext
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}

@@ -18,26 +18,37 @@
   // ---------- UI ----------
   const panel = document.createElement("section");
   panel.id = "want-not-panel";
-  panel.innerHTML = `
-    <div class="wn-head">
-      <strong>Want-Not</strong>
-      <span class="wn-summary"></span>
-      <span class="wn-spacer"></span>
-      <button type="button" class="btn btn-sm btn-link wn-settings">Settings</button>
-      <button type="button" class="btn btn-sm btn-outline-primary wn-analyze">Analyze</button>
-      <button type="button" class="btn btn-sm btn-success wn-apply" disabled>Apply</button>
-      <span class="wn-sep"></span>
-      <button type="button" class="btn btn-sm btn-outline-danger wn-reset" title="Set every entry back to &quot;Any&quot; expansion">Reset all to Any</button>
-      <button type="button" class="btn btn-sm btn-outline-secondary wn-undo" hidden>Undo reset</button>
-    </div>
-    <div class="wn-status"></div>
-    <div class="wn-results"></div>`;
+  {
+    const btn = (cls, text, extra = {}) => {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = `btn btn-sm ${cls}`;
+      b.textContent = text;
+      Object.assign(b, extra);
+      return b;
+    };
+    const span = (cls, text = "") => Object.assign(document.createElement("span"), { className: cls, textContent: text });
+    const head = document.createElement("div");
+    head.className = "wn-head";
+    head.append(
+      Object.assign(document.createElement("strong"), { textContent: "Want-Not" }),
+      span("wn-summary"),
+      span("wn-spacer"),
+      btn("btn-link wn-settings", "Settings"),
+      btn("btn-outline-primary wn-analyze", "Analyze"),
+      btn("btn-success wn-apply", "Apply", { disabled: true }),
+      span("wn-sep"),
+      btn("btn-outline-danger wn-reset", "Reset all to Any", { title: 'Set every entry back to "Any" expansion' }),
+      btn("btn-outline-secondary wn-undo", "Undo reset", { hidden: true })
+    );
+    const div = (cls) => Object.assign(document.createElement("div"), { className: cls });
+    panel.append(head, div("wn-status"), div("wn-results"));
+  }
   const anchor = document.querySelector(".page-title-container") || document.querySelector("main h1");
   (anchor?.parentNode || document.body).insertBefore(panel, anchor?.nextSibling || null);
 
   const $ = (sel) => panel.querySelector(sel);
   const setStatus = (t) => ($(".wn-status").textContent = t);
-  const esc = (s) => s.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
   $(".wn-settings").onclick = () => api.runtime.sendMessage({ type: "openSettings" });
   $(".wn-analyze").onclick = () => run(analyze);
@@ -292,24 +303,39 @@
     if (btn) run(() => applyOne(Number(btn.dataset.apply)));
   });
 
-  // ---------- results table ----------
+  // ---------- results table (built with DOM APIs) ----------
   const plural = (n, word) => `${n} ${word}${n === 1 ? "" : "s"}`;
-  const tip = (text, names) => `<span class="wn-tip" title="${esc(names.join("\n"))}">${esc(text)}</span>`;
+
+  function h(tag, attrs = {}, ...children) {
+    const el = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (v === false || v == null) continue;
+      if (k === "dataset") Object.assign(el.dataset, v);
+      else if (k === "className") el.className = v;
+      else el.setAttribute(k, v === true ? "" : v);
+    }
+    el.append(...children);
+    return el;
+  }
+
+  const tip = (text, names) => h("span", { className: "wn-tip", title: names.join("\n") }, text);
+  const badge = (text, cls) => h("span", { className: `badge ${cls}` }, text);
 
   function describe(plan) {
     const blocked = tip(plural(plan.blocked.length, "blocked version"), plan.blocked.map((o) => o.name));
-    let text = plan.isAny ? `Excludes ${blocked}` : `Removes ${blocked} from your selection`;
+    const parts = plan.isAny ? ["Excludes ", blocked] : ["Removes ", blocked, " from your selection"];
     if (plan.dropped.length) {
       const remaining = plan.select.length + plan.dropped.length;
-      text +=
-        ". " +
+      parts.push(
+        ". ",
         tip(`${CAP} cheapest of the ${remaining} remaining`, [
           `Cardmarket allows max. ${CAP} versions per card. Left out:`,
           ...plan.dropped.map((o) => o.name),
-        ]) +
-        " are kept";
+        ]),
+        " are kept"
+      );
     }
-    return text;
+    return parts;
   }
 
   function renderResults() {
@@ -317,28 +343,33 @@
     const flagged = plans.filter((p) => p.plan?.action === "flag" || p.error).length;
     $(".wn-summary").textContent = plans.length ? `${plans.length} checked · ${changed} to change · ${flagged} need attention` : "";
 
-    const rows = plans
-      .map((p, i) => [p, i])
-      .filter(([p]) => p.error || p.plan?.action !== "none")
-      .map(([p, i]) => {
-        const { entry, plan } = p;
-        let action, detail;
-        if (p.error) {
-          action = `<span class="badge bg-danger">error</span>`;
-          detail = esc(p.error);
-        } else if (plan.action === "flag") {
-          action = `<span class="badge bg-warning text-dark">check</span>`;
-          detail = `Every version is blocked (${esc(plan.blocked.map((o) => o.name).join(", "))}) — left unchanged`;
-        } else {
-          action = p.done
-            ? `<span class="badge bg-success">saved</span>`
-            : `<button type="button" class="btn btn-sm btn-outline-success py-0" data-apply="${i}" title="Apply only this card"${busy ? " disabled" : ""}>Apply</button>`;
-          detail = describe(plan);
-        }
-        return `<tr><td class="wn-action">${action}</td><td><a href="${esc(entry.editUrl)}">${esc(entry.name)}</a></td><td>${detail}</td></tr>`;
-      })
-      .join("");
-    $(".wn-results").innerHTML = rows ? `<table class="table table-sm mb-0"><tbody>${rows}</tbody></table>` : "";
+    const rows = [];
+    plans.forEach((p, i) => {
+      if (!p.error && p.plan?.action === "none") return;
+      const { entry, plan } = p;
+      let action, detail;
+      if (p.error) {
+        action = badge("error", "bg-danger");
+        detail = [p.error];
+      } else if (plan.action === "flag") {
+        action = badge("check", "bg-warning text-dark");
+        detail = [`Every version is blocked (${plan.blocked.map((o) => o.name).join(", ")}) — left unchanged`];
+      } else {
+        action = p.done
+          ? badge("saved", "bg-success")
+          : h(
+              "button",
+              { type: "button", className: "btn btn-sm btn-outline-success py-0", title: "Apply only this card", dataset: { apply: i }, disabled: busy },
+              "Apply"
+            );
+        detail = describe(plan);
+      }
+      rows.push(
+        h("tr", {}, h("td", { className: "wn-action" }, action), h("td", {}, h("a", { href: entry.editUrl }, entry.name)), h("td", {}, ...detail))
+      );
+    });
+    const box = $(".wn-results");
+    box.replaceChildren(...(rows.length ? [h("table", { className: "table table-sm mb-0" }, h("tbody", {}, ...rows))] : []));
   }
 
   restoreAnalysis();

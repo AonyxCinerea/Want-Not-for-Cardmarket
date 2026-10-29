@@ -34,3 +34,6 @@ button { padding: 5px 12px; border: 0; border-radius: 6px; background: var(--acc
 .explist li.blocked { background: var(--blocked); }
 .explist .why { margin-left: auto; color: var(--blocked-fg); font-size: 11px; white-space: nowrap; }
 code { font-size: 12px; }
+.access { background: var(--blocked); color: var(--fg); border-radius: 8px; padding: 10px 12px; margin: 4px 0 10px; }
+.access p { margin: 0 0 8px; }
+.access strong { color: var(--blocked-fg); }

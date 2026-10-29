@@ -5,7 +5,30 @@ let settings = { ...DEFAULT_SETTINGS };
 let seen = [];
 const $ = (id) => document.getElementById(id);
 
+// Host permissions can be withheld or revoked (Firefox: about:addons, Chrome: site access).
+const ORIGINS = { origins: api.runtime.getManifest().host_permissions };
+
+async function checkAccess() {
+  let ok = true;
+  try {
+    ok = await api.permissions.contains(ORIGINS);
+  } catch {
+    // permissions API unavailable: assume granted
+  }
+  $("access").hidden = ok;
+}
+
 async function init() {
+  checkAccess();
+  $("grantAccess").onclick = async () => {
+    try {
+      await api.permissions.request(ORIGINS);
+    } finally {
+      checkAccess();
+    }
+  };
+  api.permissions?.onAdded?.addListener(checkAccess);
+  api.permissions?.onRemoved?.addListener(checkAccess);
   settings = { ...DEFAULT_SETTINGS, ...(await api.storage.sync.get(DEFAULT_SETTINGS)) };
   seen = (await api.storage.local.get({ seenExpansions: [] })).seenExpansions;
   renderPresets();
