@@ -21,7 +21,7 @@ you'd have to edit every single card by hand. Want-Not does that for you.
 
 | Browser | |
 |---|---|
-| Chrome, Edge, Brave, Opera | Chrome Web Store — *coming soon* |
+| Chrome, Edge, Brave, Opera | [**Chrome Web Store**](https://chromewebstore.google.com/detail/want-not-for-cardmarket/cjckegenllnjjekaconmmanejaflhkdh) |
 | Firefox | Firefox Add-ons — *coming soon* |
 | Manual install | [Download the latest release](../../releases/latest) — see [manual installation](#manual-installation) |
 
@@ -82,7 +82,7 @@ None. See the [privacy policy](PRIVACY.md).
 
 ## Manual installation
 
-Use this if the extension isn't in your browser's store yet, or to try a newer version.
+Only needed to try a version that isn't in the stores yet. Store installs update automatically.
 
 **Chrome, Edge, Brave**
 1. Download `want-not-<version>.zip` from the [latest release](../../releases/latest) and unzip it.
