@@ -1,6 +1,6 @@
 {
   "name": "cardmarket-want-not",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "private": true,
   "scripts": { "test": "node --test test/*.test.js" },
   "devDependencies": { "jsdom": "^25.0.0" }

@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Uploads a zip to the Chrome Web Store and submits it for review (CWS API v2, service account).
-// Usage: node scripts/chrome-publish.mjs dist/want-not-x.y.z.zip
+// Usage: node scripts/chrome-publish.mjs dist/want-not-x.y.z.zip [--check]
 // Env: CWS_SERVICE_ACCOUNT_KEY (JSON key), CWS_PUBLISHER_ID, CWS_EXTENSION_ID
 import { readFile } from "node:fs/promises";
 import { createSign } from "node:crypto";
@@ -64,6 +64,13 @@ async function call(token, method, url, body, contentType = "application/json") 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
 const token = await accessToken();
+
+if (process.argv.includes("--check")) {
+  // Verifies credentials and dashboard access without uploading anything.
+  const status = await call(token, "GET", `${API}/v2/${item}:fetchStatus`);
+  console.log("Chrome Web Store access OK:", JSON.stringify(status));
+  process.exit(0);
+}
 
 console.log(`Uploading ${zipPath} …`);
 const upload = await call(token, "POST", `${API}/upload/v2/${item}:upload`, await readFile(zipPath), "application/zip");

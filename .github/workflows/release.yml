@@ -31,10 +31,17 @@ jobs:
         run: |
           mkdir -p dist/ext && unzip -q dist/*.zip -d dist/ext
           npx --yes web-ext@8 lint --source-dir dist/ext
+      - name: Check Chrome Web Store access
+        if: ${{ vars.CWS_EXTENSION_ID != '' }}
+        env:
+          CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
+          CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
+          CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
+        run: node scripts/chrome-publish.mjs "$ZIP" --check
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release create "$GITHUB_REF_NAME" "$ZIP" --title "Want-Not $GITHUB_REF_NAME" --generate-notes
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" "$ZIP" --title "Want-Not $GITHUB_REF_NAME" --generate-notes
       - name: Publish to Chrome Web Store
         if: ${{ vars.CWS_EXTENSION_ID != '' }}
         env:

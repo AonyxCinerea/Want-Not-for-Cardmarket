@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "Want-Not for Cardmarket",
   "short_name": "Want-Not",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Exclude unwanted expansions (e.g. Marvel or TMNT printings) from every card on your Cardmarket wants lists.",
   "icons": {
     "16": "icons/icon-16.png",
