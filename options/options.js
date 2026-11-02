@@ -168,7 +168,9 @@ async function initOptimizer() {
   const refresh = async () => {
     const ok = await api.permissions.contains(SHIPPING_ORIGIN).catch(() => false);
     $("grantShipping").hidden = ok;
-    $("shippingAccess").textContent = ok ? "Shipping prices: allowed" : "Reads Cardmarket's public shipping table (help.cardmarket.com).";
+    $("shippingAccess").textContent = ok
+      ? "Shipping prices: allowed"
+      : "Needed for the optimizer: reads Cardmarket's public shipping price table (help.cardmarket.com).";
   };
   $("grantShipping").onclick = async () => {
     try {

@@ -67,6 +67,13 @@ api.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .catch((e) => sendResponse({ ok: false, error: String(e.message || e) }));
     return true;
   }
+  if (msg?.type === "shippingAccess") {
+    api.permissions
+      .contains(SHIPPING_ORIGIN)
+      .then((ok) => sendResponse({ ok }))
+      .catch(() => sendResponse({ ok: false }));
+    return true;
+  }
   if (msg?.type === "openSettings") {
     api.runtime.openOptionsPage();
   }

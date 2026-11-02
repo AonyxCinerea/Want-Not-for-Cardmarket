@@ -35,7 +35,7 @@
   const listInput = el("input", { type: "text", size: 10, className: "form-control form-control-sm d-inline-block w-auto" });
   const optimizeBtn = btn("btn-primary", "Optimize incl. shipping");
   const cancelBtn = btn("btn-outline-secondary", "Cancel");
-  const downloadBtn = btn("btn-link", "Download data");
+  const downloadBtn = el("button", { type: "button", className: "btn btn-link btn-sm wn-debug", textContent: "Debug: download data", title: "Saves everything that was loaded, for bug reports" });
   cancelBtn.hidden = true;
   downloadBtn.hidden = true;
   panel.append(
@@ -45,7 +45,6 @@
       el("strong", { textContent: "Want-Not optimizer" }),
       el("label", { className: "wn-summary", textContent: "Wants list ID " }, listInput),
       el("span", { className: "wn-spacer" }),
-      downloadBtn,
       cancelBtn,
       optimizeBtn
     ),
@@ -57,7 +56,7 @@
   );
   const status = el("div", { className: "wn-status" });
   const results = el("div", { className: "wn-plan" });
-  panel.append(status, results);
+  panel.append(status, results, downloadBtn);
   // Directly below the page title; fall back to the top of <main>.
   const h1 = document.querySelector("main h1");
   if (h1) h1.after(panel);
@@ -282,6 +281,21 @@
   async function optimize() {
     results.replaceChildren();
     plan = null;
+    const access = await api.runtime.sendMessage({ type: "shippingAccess" });
+    if (!access?.ok) {
+      const open = btn("btn-outline-primary", "Open settings");
+      open.onclick = () => api.runtime.sendMessage({ type: "openSettings" });
+      setStatus("");
+      results.replaceChildren(
+        el(
+          "div",
+          { className: "wn-headline" },
+          el("span", { textContent: 'The optimizer needs Cardmarket\'s shipping price table. In the settings, click "Allow shipping prices" once, then try again.' }),
+          open
+        )
+      );
+      return;
+    }
     const data = await collect(listInput.value.trim());
     lastData = data;
     setStatus("Calculating the cheapest combination…");

@@ -20,3 +20,4 @@
 #want-not-panel .wn-plan details summary { cursor: pointer; }
 #want-not-panel .wn-items { margin: 4px 0 0; padding-left: 16px; font-size: 0.85em; }
 #want-not-panel .wn-cartlink { margin: 6px 0; }
+#want-not-panel .wn-debug { font-size: 0.8em; padding: 0; color: var(--bs-secondary-color, #6c757d); }
