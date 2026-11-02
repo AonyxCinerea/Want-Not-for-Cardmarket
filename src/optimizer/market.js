@@ -1,0 +1,143 @@
+// Parsers for Cardmarket market pages used by the optimizer.
+// All functions take a Document (DOMParser in the browser, jsdom in tests).
+(function (root) {
+  // "1.234,56 €" -> 1234.56
+  function parseEuro(text) {
+    if (text == null) return null;
+    const m = String(text).replace(/\s/g, "").match(/-?[\d.]+(,\d+)?/);
+    if (!m) return null;
+    return Number(m[0].replace(/\./g, "").replace(",", "."));
+  }
+
+  // Bootstrap moves "title" to data-bs-original-title once tooltips are initialised.
+  const tip = (el) =>
+    el ? el.getAttribute("data-bs-original-title") || el.getAttribute("title") || el.getAttribute("aria-label") || "" : "";
+
+  const RATINGS = ["outstanding", "very good", "good", "average", "bad"];
+
+  // Lower is better; unknown ratings sort last.
+  function ratingRank(rating) {
+    const i = RATINGS.indexOf((rating || "").toLowerCase());
+    return i === -1 ? RATINGS.length : i;
+  }
+
+  // Shared ".seller-info" block (wizard results, seller lists, product pages).
+  function parseSellerInfo(el) {
+    if (!el) return null;
+    const link = el.querySelector('a[href*="/Users/"]');
+    const ratingEl = el.querySelector('[class*="fonticon-seller-rating-"]');
+    const salesTitle = tip(el.querySelector(".sell-count"));
+    const locationEl = el.querySelector('[aria-label^="Item location:"], [data-bs-original-title^="Item location:"], [title^="Item location:"]');
+    const typeEl = el.querySelector('[class*="fonticon-users-"]');
+    const days = el.querySelector(".shippingTime-info");
+    return {
+      name: link ? link.textContent.trim() : null,
+      url: link ? link.getAttribute("href") : null,
+      rating: ratingEl ? tip(ratingEl).trim() : null,
+      sales: salesTitle ? Number((salesTitle.match(/(\d+)\s*(?:&nbsp;| |\s)*Sales/) || [])[1]) || null : null,
+      country: locationEl ? tip(locationEl).replace(/^Item location:\s*/, "").trim() : null,
+      type: typeEl ? tip(typeEl).trim() : null,
+      deliveryDays: days ? Number(days.textContent.trim()) || null : null,
+    };
+  }
+
+  // "Sellers with the Most Cards" on a wants list page (professional sellers only).
+  function parseSellersWithMostCards(doc) {
+    const rows = doc.querySelectorAll("#SellersWithMostWantsWrapper tbody tr");
+    return [...rows].map((tr) => {
+      const offersLink = tr.querySelector('a[href*="/Offers/Singles?idWantslist="]');
+      return {
+        ...parseSellerInfo(tr.querySelector(".seller-info") || tr),
+        idSeller: tr.querySelector('input[name="idSeller"]')?.getAttribute("value") || null,
+        offersUrl: offersLink ? offersLink.getAttribute("href") : null,
+        wantedCount: offersLink ? Number(offersLink.textContent.trim()) : null,
+      };
+    });
+  }
+
+  function dlValue(dl, label) {
+    for (const dt of dl.querySelectorAll("dt")) {
+      if (dt.textContent.trim() === label) return dt.nextElementSibling?.textContent.trim() ?? null;
+    }
+    return null;
+  }
+
+  // Shopping Wizard result page.
+  function parseWizardResult(doc) {
+    const summaryDl = doc.querySelector("section dl");
+    const sellers = [...doc.querySelectorAll(".detailed-result-card")].map((card) => {
+      const dl = card.querySelector("dl");
+      const articles = [...card.querySelectorAll("table tbody tr")].map((tr) => {
+        const tds = tr.querySelectorAll("td");
+        return {
+          idArticle: tr.querySelector("[data-id-article]")?.getAttribute("data-id-article"),
+          amount: Number(tds[2]?.textContent.trim()) || 1,
+          name: tds[3]?.textContent.trim(),
+          condition: tr.querySelector(".article-condition .badge, .badge")?.textContent.trim() || null,
+          price: parseEuro(tds[tds.length - 1]?.textContent),
+        };
+      });
+      return {
+        seller: parseSellerInfo(card.querySelector(".seller-info")),
+        idCalculation: card.querySelector('input[name="idCalculation"]')?.getAttribute("value") || null,
+        articles,
+        articlesValue: dl ? parseEuro(dlValue(dl, "Articles Value")) : null,
+        shipping: dl ? parseEuro(dlValue(dl, "Shipping Cost")) : null,
+        total: dl ? parseEuro(dlValue(dl, "Total")) : null,
+      };
+    });
+    return {
+      articlesValue: summaryDl ? parseEuro(dlValue(summaryDl, "Articles Value")) : null,
+      shipping: summaryDl ? parseEuro(dlValue(summaryDl, "Shipping Cost")) : null,
+      shipments: summaryDl ? Number(dlValue(summaryDl, "Shipments")) || null : null,
+      total: summaryDl ? parseEuro(dlValue(summaryDl, "Total")) : null,
+      sellers,
+    };
+  }
+
+  // A seller's offers filtered by a wants list: /Users/<name>/Offers/Singles?idWantslist=<id>[&site=N]
+  function parseSellerOffers(doc) {
+    const h1 = doc.querySelector(".page-title-container h1");
+    const countryEl = h1?.querySelector("[aria-label], [data-bs-original-title], [title]");
+    const pageText = [...doc.querySelectorAll("span")].map((s) => s.textContent).find((t) => /^Page \d+ of \d+$/.test(t.trim()));
+    const [, page, pages] = (pageText || "").match(/Page (\d+) of (\d+)/) || [];
+    const next = doc.querySelector('a[aria-label="Next page"]:not(.disabled)');
+
+    const offers = [...doc.querySelectorAll('[id^="stockRow"]')].map((row) => {
+      const cardLink = row.querySelector(".col-seller a");
+      const thumb = row.querySelector(".thumbnail-icon");
+      const thumbHtml = thumb?.getAttribute("data-bs-title") || thumb?.getAttribute("title") || "";
+      const attrs = row.querySelector(".product-attributes");
+      const labels = attrs ? [...attrs.querySelectorAll("[aria-label]")].map((e) => e.getAttribute("aria-label")) : [];
+      const conditionEl = row.querySelector(".article-condition");
+      const langEl = attrs?.querySelector("span.icon[aria-label], span.icon[data-bs-original-title]");
+      const priceEl = row.querySelector(".price-container .color-primary") || row.querySelector(".color-primary");
+      return {
+        idArticle: row.id.replace("stockRow", ""),
+        name: cardLink?.textContent.trim() || null,
+        productUrl: cardLink?.getAttribute("href") || null,
+        idProduct: (thumbHtml.match(/\/(\d+)\/\d+\.jpg/) || [])[1] || null,
+        expansion: tip(row.querySelector("a.expansion-symbol")) || null,
+        condition: conditionEl?.querySelector(".badge")?.textContent.trim() || null,
+        language: langEl ? tip(langEl) : null,
+        foil: labels.includes("Foil"),
+        signed: labels.includes("Signed"),
+        altered: labels.includes("Altered"),
+        price: parseEuro(priceEl?.textContent),
+        available: Number(row.querySelector(".item-count")?.textContent.trim()) || 1,
+      };
+    });
+
+    return {
+      country: countryEl ? tip(countryEl).trim() : null,
+      page: Number(page) || 1,
+      pages: Number(pages) || 1,
+      nextUrl: next ? next.getAttribute("href") : null,
+      offers,
+    };
+  }
+
+  const api = { parseEuro, ratingRank, RATINGS, parseSellerInfo, parseSellersWithMostCards, parseWizardResult, parseSellerOffers };
+  if (typeof module !== "undefined") module.exports = api;
+  else root.WantNotMarket = api;
+})(this);

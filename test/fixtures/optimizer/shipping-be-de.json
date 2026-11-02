@@ -1,0 +1,10 @@
+[
+  {"name":"Priority Letter","isTracked":false,"maxValue":"25,00 €","maxWeight":50,"stampPrice":"3,07 €","price":"3,37 €","isLetter":true,"isVirtual":false},
+  {"name":"Priority Letter","isTracked":false,"maxValue":"25,00 €","maxWeight":100,"stampPrice":"9,21 €","price":"9,71 €","isLetter":true,"isVirtual":false},
+  {"name":"Bpost Parcel - Economy","isTracked":false,"maxValue":"25,00 €","maxWeight":2000,"stampPrice":"11,60 €","price":"12,60 €","isLetter":false,"isVirtual":false},
+  {"name":"Bpost Parcel - Economy","isTracked":false,"maxValue":"25,00 €","maxWeight":5000,"stampPrice":"18,10 €","price":"19,10 €","isLetter":false,"isVirtual":false},
+  {"name":"Bpost Parcel - Standard 500€ insured","isTracked":true,"maxValue":"500,00 €","maxWeight":10000,"stampPrice":"21,65 €","price":"22,65 €","isLetter":false,"isVirtual":false},
+  {"name":"Bpost Parcel - Standard 500€ insured","isTracked":true,"maxValue":"500,00 €","maxWeight":20000,"stampPrice":"47,35 €","price":"48,35 €","isLetter":false,"isVirtual":false},
+  {"name":"SHIPPING COST ESTIMATION for Courier Parcel with Full Insurance","isTracked":true,"maxValue":"2.500,00 €","maxWeight":20000,"stampPrice":"149,00 €","price":"150,00 €","isLetter":false,"isVirtual":false},
+  {"name":"Virtual Delivery","isTracked":true,"maxValue":"10.000,00 €","maxWeight":0,"stampPrice":"0,00 €","price":"0,00 €","isLetter":false,"isVirtual":true}
+]
