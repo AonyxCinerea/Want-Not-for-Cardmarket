@@ -152,3 +152,32 @@ function renderExpansions() {
 }
 
 init();
+
+// ---------- optimizer (preview) ----------
+const SHIPPING_ORIGIN = { origins: ["https://help.cardmarket.com/*"] };
+
+async function initOptimizer() {
+  const select = $("destination");
+  for (const country of Object.keys(WantNotShipping.COUNTRY_IDS).sort()) {
+    select.append(new Option(country, country));
+  }
+  const { destinationCountry = "Germany" } = await api.storage.sync.get("destinationCountry");
+  select.value = destinationCountry;
+  select.onchange = () => api.storage.sync.set({ destinationCountry: select.value });
+
+  const refresh = async () => {
+    const ok = await api.permissions.contains(SHIPPING_ORIGIN).catch(() => false);
+    $("grantShipping").hidden = ok;
+    $("shippingAccess").textContent = ok ? "Shipping prices: allowed" : "Reads Cardmarket's public shipping table (help.cardmarket.com).";
+  };
+  $("grantShipping").onclick = async () => {
+    try {
+      await api.permissions.request(SHIPPING_ORIGIN);
+    } finally {
+      refresh();
+    }
+  };
+  refresh();
+}
+
+initOptimizer();

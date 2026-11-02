@@ -15,3 +15,8 @@
 #want-not-panel .wn-tip { text-decoration: underline dotted; cursor: help; }
 #want-not-panel .wn-action { width: 1%; white-space: nowrap; }
 #want-not-panel .wn-sep { width: 1px; align-self: stretch; background: var(--bs-border-color, #dee2e6); margin: 0 4px; }
+#want-not-panel .wn-headline { display: flex; align-items: center; gap: 8px; margin: 8px 0; }
+#want-not-panel .wn-plan table td, #want-not-panel .wn-plan table th { vertical-align: top; }
+#want-not-panel .wn-plan details summary { cursor: pointer; }
+#want-not-panel .wn-items { margin: 4px 0 0; padding-left: 16px; font-size: 0.85em; }
+#want-not-panel .wn-cartlink { margin: 6px 0; }

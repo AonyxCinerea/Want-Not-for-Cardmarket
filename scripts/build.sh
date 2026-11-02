@@ -9,5 +9,5 @@ out="$out_dir/want-not-$version.zip"
 
 mkdir -p "$out_dir"
 rm -f "$out"
-zip -r -X -q "$out" manifest.json src options icons LICENSE -x '*.DS_Store'
+zip -r -X -q "$out" manifest.json src options icons vendor LICENSE -x '*.DS_Store'
 echo "$out"

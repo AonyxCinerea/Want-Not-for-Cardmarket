@@ -17,9 +17,14 @@
     "https://www.cardmarket.com/*",
     "https://api.scryfall.com/*"
   ],
+  "optional_host_permissions": [
+    "https://help.cardmarket.com/*"
+  ],
   "background": {
     "service_worker": "src/background.js",
     "scripts": [
+      "src/optimizer/shipping.js",
+      "vendor/highs/highs.js",
       "src/background.js"
     ]
   },
@@ -50,8 +55,25 @@
         "src/content.css"
       ],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.cardmarket.com/*/Magic/Wants/*"
+      ],
+      "js": [
+        "src/optimizer/market.js",
+        "src/optimizer/model.js",
+        "src/optimizer/collect.js"
+      ],
+      "css": [
+        "src/content.css"
+      ],
+      "run_at": "document_idle"
     }
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'"
+  },
   "browser_specific_settings": {
     "gecko": {
       "id": "want-not@aonyxcinerea",

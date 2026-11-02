@@ -37,3 +37,4 @@ code { font-size: 12px; }
 .access { background: var(--blocked); color: var(--fg); border-radius: 8px; padding: 10px 12px; margin: 4px 0 10px; }
 .access p { margin: 0 0 8px; }
 .access strong { color: var(--blocked-fg); }
+select { padding: 4px 6px; border: 1px solid var(--line); border-radius: 6px; background: transparent; color: inherit; font: inherit; }

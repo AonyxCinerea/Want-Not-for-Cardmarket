@@ -44,7 +44,9 @@
   // "Sellers with the Most Cards" on a wants list page (professional sellers only).
   function parseSellersWithMostCards(doc) {
     const rows = doc.querySelectorAll("#SellersWithMostWantsWrapper tbody tr");
-    return [...rows].map((tr) => {
+    return [...rows]
+      .filter((tr) => tr.querySelector('a[href*="/Offers/Singles?idWantslist="]') && !tr.closest("#DummySellersTable"))
+      .map((tr) => {
       const offersLink = tr.querySelector('a[href*="/Offers/Singles?idWantslist="]');
       return {
         ...parseSellerInfo(tr.querySelector(".seller-info") || tr),
@@ -108,10 +110,13 @@
       const thumb = row.querySelector(".thumbnail-icon");
       const thumbHtml = thumb?.getAttribute("data-bs-title") || thumb?.getAttribute("title") || "";
       const attrs = row.querySelector(".product-attributes");
-      const labels = attrs ? [...attrs.querySelectorAll("[aria-label]")].map((e) => e.getAttribute("aria-label")) : [];
+      const labels = attrs ? [...attrs.querySelectorAll("[aria-label], [title], [data-bs-original-title]")].map(tip) : [];
       const conditionEl = row.querySelector(".article-condition");
-      const langEl = attrs?.querySelector("span.icon[aria-label], span.icon[data-bs-original-title]");
-      const priceEl = row.querySelector(".price-container .color-primary") || row.querySelector(".color-primary");
+      const langEl = attrs?.querySelector("span.icon[aria-label], span.icon[data-bs-original-title], span.icon[title]");
+      // The price is the text that contains "€" (icons like the tracked-shipping check share the same class).
+      const priceBox = row.querySelector(".price-container") || row;
+      const priceEl = [...priceBox.querySelectorAll("span")].find((e) => /\d.*€/.test(e.textContent) && !e.querySelector("span"));
+      const trackedHint = priceBox.querySelector('[title*="tracked shipping"], [data-bs-original-title*="tracked shipping"], [aria-label*="tracked shipping"]');
       return {
         idArticle: row.id.replace("stockRow", ""),
         name: cardLink?.textContent.trim() || null,
@@ -125,6 +130,7 @@
         altered: labels.includes("Altered"),
         price: parseEuro(priceEl?.textContent),
         available: Number(row.querySelector(".item-count")?.textContent.trim()) || 1,
+        trackedOnly: !!trackedHint,
       };
     });
 
@@ -137,7 +143,55 @@
     };
   }
 
-  const api = { parseEuro, ratingRank, RATINGS, parseSellerInfo, parseSellersWithMostCards, parseWizardResult, parseSellerOffers };
+
+  const hidden = (el) => (el ? [...el.querySelectorAll(".visually-hidden")].map((x) => x.textContent.trim()).filter(Boolean) : []);
+
+  // Wants list rows with the filters the optimizer needs.
+  // expansions: [] means "Any"; languages: [] means "Any"; foil/signed/altered: "Any" | "Yes" | "No"
+  function parseWantsDetails(doc) {
+    // Only table rows: the page also has a mobile list with the same data-id-want checkboxes.
+    const rows = [...doc.querySelectorAll("tr input[data-id-want]")].map((cb) => [cb, cb.closest("tr")]);
+    return rows.map(([cb, row]) => {
+      const cell = (sel) => row.querySelector(sel);
+      const ternary = [...row.querySelectorAll("td.ternary-header")].map((td) => hidden(td)[0] || "Any");
+      const expansions = hidden(cell("td.expansion")).filter((x) => x !== "Any");
+      const languages = hidden(cell("td.languages")).filter((x) => x !== "Any");
+      const amountCell = cell("td.amount");
+      return {
+        idWant: cb.getAttribute("data-id-want"),
+        name: cell("td.name a")?.textContent.trim() || null,
+        cardUrl: cell("td.name a")?.getAttribute("href") || null,
+        amount: Number(amountCell?.getAttribute("data-amount") || amountCell?.textContent.trim()) || 1,
+        expansions,
+        languages,
+        minCondition: cell("td.condition .badge")?.textContent.trim() || null,
+        foil: ternary[0] || "Any",
+        signed: ternary[1] || "Any",
+        altered: ternary[2] || "Any",
+        buyPrice: parseEuro(cell("td.buyPrice")?.textContent) || null,
+      };
+    });
+  }
+
+
+  // Shopping cart page: one block per seller with data-* totals.
+  function parseCart(doc) {
+    const shipments = [...doc.querySelectorAll("[data-total-price]")].map((el) => {
+      const section = el.closest("section, .card, [id^='seller']") || el.parentElement;
+      const sellerLink = section?.querySelector('a[href*="/Users/"]');
+      return {
+        seller: sellerLink ? sellerLink.textContent.trim() : null,
+        articles: Number(el.getAttribute("data-article-count")) || 0,
+        value: Number(el.getAttribute("data-item-value")) || 0,
+        shipping: Number(el.getAttribute("data-shipping-price")) || 0,
+        total: Number(el.getAttribute("data-total-price")) || 0,
+      };
+    });
+    const sum = (k) => Math.round(shipments.reduce((a, s) => a + s[k], 0) * 100) / 100;
+    return { shipments, articles: sum("articles"), value: sum("value"), shipping: sum("shipping"), total: sum("total") };
+  }
+
+  const api = { parseEuro, ratingRank, RATINGS, parseSellerInfo, parseSellersWithMostCards, parseWizardResult, parseSellerOffers, parseWantsDetails, parseCart };
   if (typeof module !== "undefined") module.exports = api;
   else root.WantNotMarket = api;
 })(this);
