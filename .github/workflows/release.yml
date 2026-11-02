@@ -7,10 +7,11 @@ on:
 permissions:
   contents: write
 
+# Each store is its own job, so a failed upload can be retried with
+# "Re-run failed jobs" without uploading the same version to the other store again.
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    environment: store-release
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -26,26 +27,97 @@ jobs:
             exit 1
           fi
       - name: Build
-        run: echo "ZIP=$(./scripts/build.sh)" >> "$GITHUB_ENV"
+        run: ./scripts/build.sh
       - name: Lint package (Mozilla web-ext)
         run: |
           mkdir -p dist/ext && unzip -q dist/*.zip -d dist/ext
           npx --yes web-ext@8 lint --source-dir dist/ext
+      - uses: actions/upload-artifact@v4
+        with:
+          name: extension
+          path: dist/*.zip
+          if-no-files-found: error
+
+  # Fails fast on broken store credentials, before anything is published.
+  check-stores:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: store-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension
+          path: dist
       - name: Check Chrome Web Store access
         if: ${{ vars.CWS_EXTENSION_ID != '' }}
         env:
           CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
           CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
           CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
-        run: node scripts/chrome-publish.mjs "$ZIP" --check
+        run: node scripts/chrome-publish.mjs dist/*.zip --check
+      - name: Check Firefox Add-ons access
+        if: ${{ vars.AMO_PUBLISH == 'true' }}
+        env:
+          AMO_JWT_ISSUER: ${{ secrets.AMO_JWT_ISSUER }}
+          AMO_JWT_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: node scripts/amo-check.mjs
+
+  github-release:
+    needs: check-stores
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension
+          path: dist
       - name: Create GitHub release
         env:
           GH_TOKEN: ${{ github.token }}
-        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" "$ZIP" --title "Want-Not $GITHUB_REF_NAME" --generate-notes
+          GH_REPO: ${{ github.repository }}
+        run: gh release view "$GITHUB_REF_NAME" >/dev/null 2>&1 || gh release create "$GITHUB_REF_NAME" dist/*.zip --title "Want-Not $GITHUB_REF_NAME" --generate-notes
+
+  chrome:
+    needs: check-stores
+    if: ${{ vars.CWS_EXTENSION_ID != '' }}
+    runs-on: ubuntu-latest
+    environment: store-release
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension
+          path: dist
       - name: Publish to Chrome Web Store
-        if: ${{ vars.CWS_EXTENSION_ID != '' }}
         env:
           CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
           CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
           CWS_EXTENSION_ID: ${{ vars.CWS_EXTENSION_ID }}
-        run: node scripts/chrome-publish.mjs "$ZIP"
+        run: node scripts/chrome-publish.mjs dist/*.zip
+
+  firefox:
+    needs: check-stores
+    if: ${{ vars.AMO_PUBLISH == 'true' }}
+    runs-on: ubuntu-latest
+    environment: store-release
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - uses: actions/download-artifact@v4
+        with:
+          name: extension
+          path: dist
+      - name: Submit to Firefox Add-ons
+        env:
+          WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
+          WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
+        run: |
+          mkdir ext && unzip -q dist/*.zip -d ext
+          npx --yes web-ext@8 sign --source-dir ext --channel listed --approval-timeout 0
