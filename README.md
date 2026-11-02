@@ -22,7 +22,7 @@ you'd have to edit every single card by hand. Want-Not does that for you.
 | Browser | |
 |---|---|
 | Chrome, Edge, Brave, Opera | [**Chrome Web Store**](https://chromewebstore.google.com/detail/want-not-for-cardmarket/cjckegenllnjjekaconmmanejaflhkdh) |
-| Firefox | Firefox Add-ons — *coming soon* |
+| Firefox | [**Firefox Add-ons**](https://addons.mozilla.org/firefox/addon/want-not-for-cardmarket/) |
 | Manual install | [Download the latest release](../../releases/latest) — see [manual installation](#manual-installation) |
 
 ## How to use
@@ -92,8 +92,8 @@ Only needed to try a version that isn't in the stores yet. Store installs update
 Manually installed extensions don't update automatically — repeat these steps for a new version.
 
 **Firefox**
-Firefox only installs signed add-ons permanently. Until Want-Not is on Firefox Add-ons you can load it
-temporarily (until the next restart): open `about:debugging#/runtime/this-firefox`,
+Firefox only installs signed add-ons permanently, so use [Firefox Add-ons](https://addons.mozilla.org/firefox/addon/want-not-for-cardmarket/).
+To try an unreleased version, load it temporarily (until the next restart): open `about:debugging#/runtime/this-firefox`,
 click **Load Temporary Add-on** and pick `manifest.json` from the unzipped folder.
 
 ## Development
