@@ -7,6 +7,8 @@ on:
 permissions:
   contents: write
 
+# Environment variables (vars.*) are only visible inside a job that uses the environment,
+# so store switches are checked per step, not with a job-level "if".
 # Each store is its own job, so a failed upload can be retried with
 # "Re-run failed jobs" without uploading the same version to the other store again.
 jobs:
@@ -82,7 +84,6 @@ jobs:
 
   chrome:
     needs: check-stores
-    if: ${{ vars.CWS_EXTENSION_ID != '' }}
     runs-on: ubuntu-latest
     environment: store-release
     steps:
@@ -95,6 +96,7 @@ jobs:
           name: extension
           path: dist
       - name: Publish to Chrome Web Store
+        if: ${{ vars.CWS_EXTENSION_ID != '' }}
         env:
           CWS_SERVICE_ACCOUNT_KEY: ${{ secrets.CWS_SERVICE_ACCOUNT_KEY }}
           CWS_PUBLISHER_ID: ${{ vars.CWS_PUBLISHER_ID }}
@@ -103,7 +105,6 @@ jobs:
 
   firefox:
     needs: check-stores
-    if: ${{ vars.AMO_PUBLISH == 'true' }}
     runs-on: ubuntu-latest
     environment: store-release
     steps:
@@ -115,6 +116,7 @@ jobs:
           name: extension
           path: dist
       - name: Submit to Firefox Add-ons
+        if: ${{ vars.AMO_PUBLISH == 'true' }}
         env:
           WEB_EXT_API_KEY: ${{ secrets.AMO_JWT_ISSUER }}
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
