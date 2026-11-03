@@ -105,6 +105,10 @@ own risk, and don't run the optimizer on many lists in a row.
 It depends on the list. In our tests it was 7–22% cheaper than the Shopping Wizard's "cheapest" result,
 almost entirely through fewer shipments. If the Wizard's result is already the cheapest, it says so.
 
+**Does the optimizer run the Shopping Wizard?**
+No, it works with the result of a Wizard run you started yourself. Note that Cardmarket limits how often
+you can run the Wizard per day; if you run it many times in a row, it is blocked until the next day.
+
 **Why does the optimizer only look at some sellers?**
 Loading every seller's offers would take hours and many thousands of requests. Want-Not looks at the
 sellers the Wizard picked and the sellers with the most cards from your list. For very large lists,

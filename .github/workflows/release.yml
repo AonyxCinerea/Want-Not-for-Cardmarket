@@ -108,6 +108,7 @@ jobs:
     runs-on: ubuntu-latest
     environment: store-release
     steps:
+      - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
         with:
           node-version: 22
@@ -122,4 +123,4 @@ jobs:
           WEB_EXT_API_SECRET: ${{ secrets.AMO_JWT_SECRET }}
         run: |
           mkdir ext && unzip -q dist/*.zip -d ext
-          npx --yes web-ext@8 sign --source-dir ext --channel listed --approval-timeout 0
+          npx --yes web-ext@8 sign --source-dir ext --channel listed --approval-timeout 0 --amo-metadata docs/store/amo-metadata.json
