@@ -75,6 +75,19 @@
     else await api.storage.local.remove(analysisKey);
   }
 
+  // Bulk changes reload the page so Cardmarket's own table shows them; the result message survives the reload.
+  const noticeKey = `notice:${listId}`;
+  async function reloadWithStatus(message) {
+    await api.storage.local.set({ [noticeKey]: { message, at: Date.now() } });
+    location.reload();
+  }
+  async function showNotice() {
+    const notice = (await api.storage.local.get(noticeKey))[noticeKey];
+    if (!notice) return;
+    await api.storage.local.remove(noticeKey);
+    if (Date.now() - notice.at < 2 * 60 * 1000) setStatus(notice.message);
+  }
+
   async function restoreAnalysis() {
     const saved = (await api.storage.local.get(analysisKey))[analysisKey];
     if (!saved?.plans?.length || Date.now() - saved.at > ANALYSIS_MAX_AGE_MS) return;
@@ -230,10 +243,9 @@
     plans = [];
     await persistAnalysis();
     await refreshUndo();
-    setStatus(
-      `Reset ${backup.entries.length - failed.length} entries to Any. Reload the page to see it.` +
-        (failed.length ? ` Failed: ${failed.join("; ")}` : "")
-    );
+    const msg = `Reset ${backup.entries.length - failed.length} entries to Any.` + (failed.length ? ` Failed: ${failed.join("; ")}` : "");
+    if (backup.entries.length > failed.length) await reloadWithStatus(msg);
+    else setStatus(msg);
   }
 
   async function undoReset() {
@@ -256,10 +268,9 @@
     plans = [];
     await persistAnalysis();
     await refreshUndo();
-    setStatus(
-      `Restored ${backup.entries.length - failed.length} entries. Reload the page to see it.` +
-        (failed.length ? ` ${failed.length} failed; "Undo reset" will retry them.` : "")
-    );
+    const msg = `Restored ${backup.entries.length - failed.length} entries.` + (failed.length ? ` ${failed.length} failed; "Undo reset" will retry them.` : "");
+    if (backup.entries.length > failed.length) await reloadWithStatus(msg);
+    else setStatus(msg);
   }
 
   async function apply() {
@@ -280,7 +291,9 @@
       await persistAnalysis();
       if (i < todo.length - 1) await sleep(DELAY_MS);
     }
-    setStatus(`Saved ${ok}/${todo.length}. Reload the page to see the new expansions; Analyze again to verify.`);
+    const msg = `Saved ${ok}/${todo.length}.` + (ok < todo.length ? " The failed ones are marked below." : " Analyze again to verify.");
+    if (ok) await reloadWithStatus(msg);
+    else setStatus(msg);
   }
 
   async function applyOne(index) {
@@ -372,5 +385,5 @@
     box.replaceChildren(...(rows.length ? [h("table", { className: "table table-sm mb-0" }, h("tbody", {}, ...rows))] : []));
   }
 
-  restoreAnalysis();
+  restoreAnalysis().then(showNotice);
 })();
