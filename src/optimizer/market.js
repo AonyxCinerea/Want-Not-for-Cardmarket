@@ -174,20 +174,34 @@
   }
 
 
-  // Shopping cart page: one block per seller with data-* totals.
+  // Shopping cart page. Each seller has one container (id="seller<id>") with data-* totals;
+  // the summary inside it is rendered twice (desktop and mobile), so it must not be counted.
   function parseCart(doc) {
-    const shipments = [...doc.querySelectorAll("[data-total-price]")].map((el) => {
-      const section = el.closest("section, .card, [id^='seller']") || el.parentElement;
-      const sellerLink = section?.querySelector('a[href*="/Users/"]');
-      return {
-        seller: sellerLink ? sellerLink.textContent.trim() : null,
-        articles: Number(el.getAttribute("data-article-count")) || 0,
-        value: Number(el.getAttribute("data-item-value")) || 0,
-        shipping: Number(el.getAttribute("data-shipping-price")) || 0,
-        total: Number(el.getAttribute("data-total-price")) || 0,
-      };
+    const n = (el, a) => Number(el.getAttribute(a)) || 0;
+    let blocks = [...doc.querySelectorAll('[id^="seller"][data-article-count]')].map((el) => ({
+      el,
+      articles: n(el, "data-article-count"),
+      value: n(el, "data-item-value"),
+      shipping: n(el, "data-ship-cost") + n(el, "data-service-cost"),
+    }));
+    if (!blocks.length) {
+      // fallback: summary blocks, de-duplicated per seller container
+      const seen = new Set();
+      blocks = [...doc.querySelectorAll("[data-total-price]")]
+        .filter((el) => {
+          const key = el.closest('[id^="seller"], section') || el.parentElement;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        })
+        .map((el) => ({ el, articles: n(el, "data-article-count"), value: n(el, "data-item-value"), shipping: n(el, "data-shipping-price") }));
+    }
+    const r2 = (x) => Math.round(x * 100) / 100;
+    const shipments = blocks.map(({ el, articles, value, shipping }) => {
+      const link = el.querySelector('a[href*="/Users/"]') || el.closest("section")?.querySelector('a[href*="/Users/"]');
+      return { seller: link ? link.textContent.trim() : null, articles, value: r2(value), shipping: r2(shipping), total: r2(value + shipping) };
     });
-    const sum = (k) => Math.round(shipments.reduce((a, s) => a + s[k], 0) * 100) / 100;
+    const sum = (k) => r2(shipments.reduce((a, s) => a + s[k], 0));
     return { shipments, articles: sum("articles"), value: sum("value"), shipping: sum("shipping"), total: sum("total") };
   }
 

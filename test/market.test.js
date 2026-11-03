@@ -121,3 +121,15 @@ test("shopping cart totals from the per-seller data attributes", () => {
   assert.deepEqual(c.shipments.map((s) => [s.seller, s.articles]), [["SellerA", 1], ["SellerB", 3]]);
   assert.deepEqual([c.articles, c.value, c.shipping, c.total], [4, 7.04, 2.95, 9.99]);
 });
+
+test("shopping cart: summaries rendered twice (desktop + mobile) are counted once", () => {
+  const seller = (id, name, n, value, ship) => `
+    <div id="seller${id}" data-article-count="${n}" data-item-value="${value}" data-ship-cost="${ship}" data-service-cost="0">
+      <h2><a href="/en/Magic/Users/${name}">${name}</a></h2>
+      <div class="d-none d-lg-block"><div data-article-count="${n}" data-item-value="${value}" data-total-price="${value + ship}" data-shipping-price="${ship}"></div></div>
+      <div class="d-lg-none"><div data-article-count="${n}" data-item-value="${value}" data-total-price="${value + ship}" data-shipping-price="${ship}"></div></div>
+    </div>`;
+  const c = M.parseCart(new JSDOM(`<main>${seller(1, "SellerA", 1, 1.99, 1.2)}${seller(2, "SellerB", 3, 5.05, 1.75)}</main>`).window.document);
+  assert.deepEqual(c.shipments.map((s) => [s.seller, s.articles, s.total]), [["SellerA", 1, 3.19], ["SellerB", 3, 6.8]]);
+  assert.equal(c.total, 9.99);
+});

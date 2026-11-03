@@ -1,7 +1,7 @@
 # Store listings
 
 Copy-paste texts for the Chrome Web Store and Firefox Add-ons (AMO).
-Graphics: `docs/store/screenshot-1..4.png` (1280×800), `docs/store/promo-small-440x280.png`, `icons/icon-128.png`.
+Graphics: `docs/store/screenshot-1..5.png` (1280×800), `docs/store/promo-small-440x280.png`, `icons/icon-128.png`.
 
 ---
 
@@ -61,7 +61,7 @@ Not affiliated with or endorsed by Cardmarket. Magic: The Gathering is a tradema
 - Category: Shopping
 - Language: English
 - Store icon: `icons/icon-128.png`
-- Screenshots: `docs/store/screenshot-1.png` … `screenshot-4.png`
+- Screenshots: `docs/store/screenshot-1.png` … `screenshot-5.png` (5 = optimizer, new in 0.4.0)
 - Small promo tile: `docs/store/promo-small-440x280.png`
 
 **Privacy tab**
@@ -91,7 +91,7 @@ Data usage: tick **none** of the data types. Tick all three certifications (no s
 - Tags: cardmarket, magic the gathering, mtg, shopping
 - License: MIT
 - Privacy policy: paste the contents of `PRIVACY.md`
-- Screenshots: `docs/store/screenshot-1.png` … `screenshot-4.png`
+- Screenshots: `docs/store/screenshot-1.png` … `screenshot-5.png` (5 = optimizer, new in 0.4.0)
 
 **Notes to reviewer:**
 ```
