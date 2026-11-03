@@ -4,7 +4,8 @@
 
 <p align="center">
 Keep the printings you don't want out of your Cardmarket orders.<br>
-Exclude expansions like <b>Marvel</b> or <b>Teenage Mutant Ninja Turtles</b> from <i>every</i> card on a wants list — in one click.
+Exclude expansions like <b>Marvel</b> or <b>Teenage Mutant Ninja Turtles</b> from <i>every</i> card on a wants list — in one click.<br>
+And let the optimizer find a cheaper order than the Shopping Wizard, <i>including shipping</i>.
 </p>
 
 <p align="center"><img src="docs/screenshots/demo.gif" width="720" alt="Analyze and apply on a Cardmarket wants list"></p>
@@ -51,6 +52,28 @@ Click the Want-Not icon in your browser toolbar (or *Settings* in the panel):
 **Reset all to Any** sets every card on the list back to "any expansion". Your previous selections are
 backed up, and **Undo reset** restores them.
 
+## Optimizer: cheapest order including shipping
+
+The Shopping Wizard either finds the cheapest card prices or the fewest shipments. Want-Not finds the
+cheapest **total**: sometimes a card that costs a little more is the better buy, because it comes from a
+seller you're ordering from anyway and saves a whole shipment.
+
+1. Run the **Shopping Wizard** on a wants list as usual.
+2. On the results page, click **Optimize incl. shipping**. Want-Not loads what the Wizard's sellers (and
+   the sellers with the most cards from your list) have, plus Cardmarket's shipping prices. This takes a
+   few minutes for big lists.
+3. Compare: the plan shows the total, the saving against the Wizard and the cards per seller.
+4. Click **Add plan to cart**. Afterwards Want-Not shows the actual total from your shopping cart.
+
+<p align="center"><img src="docs/screenshots/optimizer.png" width="720" alt="Optimizer plan compared with the Shopping Wizard"></p>
+
+Before the first use, open the settings once: choose where you live under **Ship to** and click
+**Allow shipping prices**. The optimizer reads Cardmarket's public shipping price table for that.
+
+Your wants list's filters (printings, language, condition, foil) are respected, so it works together
+with the excluded expansions above. Shipping is estimated from Cardmarket's price table; the shopping
+cart always shows the final amount, and nothing is ordered until you check out yourself.
+
 ## FAQ
 
 **What exactly happens to a card?**
@@ -72,10 +95,24 @@ No — Cardmarket lists all Secret Lair cards under one expansion ("Secret Lair 
 can only be excluded as a whole.
 
 **Is it safe to use?**
-Want-Not only does what you could do by hand: it opens each card's edit page and saves it, one card at
-a time with a short pause, in your own logged-in session. It never touches your cart, orders or
-account settings. Still, it is an unofficial tool that automates actions on Cardmarket — use it at your
-own risk.
+Want-Not only does what you could do by hand: it opens pages and saves wants or adds cards to your cart,
+one request at a time with a pause in between, in your own logged-in session. It never places orders and
+never touches your account settings. If Cardmarket asks it to slow down, it waits, and it stops after
+repeated refusals. Still, it is an unofficial tool that automates actions on Cardmarket. Use it at your
+own risk, and don't run the optimizer on many lists in a row.
+
+**How much does the optimizer save?**
+It depends on the list. In our tests it was 7–22% cheaper than the Shopping Wizard's "cheapest" result,
+almost entirely through fewer shipments. If the Wizard's result is already the cheapest, it says so.
+
+**Does the optimizer run the Shopping Wizard?**
+No, it works with the result of a Wizard run you started yourself. Note that Cardmarket limits how often
+you can run the Wizard per day; if you run it many times in a row, it is blocked until the next day.
+
+**Why does the optimizer only look at some sellers?**
+Loading every seller's offers would take hours and many thousands of requests. Want-Not looks at the
+sellers the Wizard picked and the sellers with the most cards from your list. For very large lists,
+Cardmarket sometimes can't compute the second list; the optimizer then works with the Wizard's sellers.
 
 **What data does it collect?**
 None. See the [privacy policy](PRIVACY.md).

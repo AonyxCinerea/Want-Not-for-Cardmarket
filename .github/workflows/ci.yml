@@ -16,7 +16,7 @@ jobs:
       - run: npm install
       - run: npm test
       - name: Build
-        run: ./scripts/build.sh
+        run: bash scripts/build.sh
       - name: Lint package (Mozilla web-ext)
         run: |
           mkdir -p dist/ext && unzip -q dist/*.zip -d dist/ext

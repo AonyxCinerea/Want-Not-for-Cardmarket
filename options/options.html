@@ -49,7 +49,21 @@
       Also remove blocked expansions from entries where you picked specific expansions</label>
   </section>
 
+  <section>
+    <h2>Optimizer</h2>
+    <p class="muted">On the Shopping Wizard results page, "Optimize incl. shipping" finds a cheaper combination of sellers including shipping costs.</p>
+    <div class="row">
+      <label for="destination">Ship to</label>
+      <select id="destination"></select>
+    </div>
+    <div class="row">
+      <button id="grantShipping" type="button">Allow shipping prices</button>
+      <span id="shippingAccess" class="muted small"></span>
+    </div>
+  </section>
+
   <script src="../src/blocklist.js"></script>
+  <script src="../src/optimizer/shipping.js"></script>
   <script src="options.js"></script>
 </body>
 </html>
