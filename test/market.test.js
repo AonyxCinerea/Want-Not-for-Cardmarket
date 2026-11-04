@@ -133,3 +133,18 @@ test("shopping cart: summaries rendered twice (desktop + mobile) are counted onc
   assert.deepEqual(c.shipments.map((s) => [s.seller, s.articles, s.total]), [["SellerA", 1, 3.19], ["SellerB", 3, 6.8]]);
   assert.equal(c.total, 9.99);
 });
+
+test("wizard history: list name, card count, date and result id", () => {
+  const h = M.parseWizardHistory(load("wizard-history.html"));
+  assert.equal(h.length, 3);
+  assert.deepEqual(
+    { id: h[0].id, listName: h[0].listName, cards: h[0].cards },
+    { id: "2026-11-993144655-6ae9e7dd444fd", listName: "Test List", cards: 15 }
+  );
+  assert.equal(new Date(h[2].date).getDate(), 2);
+});
+
+test("wants list name from the page title", () => {
+  const doc = new JSDOM('<main><div class="page-title-container"><div><h1>Explorers Upgrade 100</h1></div></div></main>').window.document;
+  assert.equal(M.parseWantsListName(doc), "Explorers Upgrade 100");
+});

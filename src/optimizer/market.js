@@ -205,7 +205,31 @@
     return { shipments, articles: sum("articles"), value: sum("value"), shipping: sum("shipping"), total: sum("total") };
   }
 
-  const api = { parseEuro, ratingRank, RATINGS, parseSellerInfo, parseSellersWithMostCards, parseWizardResult, parseSellerOffers, parseWantsDetails, parseCart };
+
+  // Shopping Wizard results history (/Magic/Wants/ShoppingWizard/Results): earlier runs, newest first.
+  function parseWizardHistory(doc) {
+    return [...doc.querySelectorAll('a[href*="/ShoppingWizard/Results/"]')]
+      .filter((a) => a.querySelector("span"))
+      .map((a) => {
+        const title = a.querySelector("span").textContent.trim();
+        const [, listName, cards] = title.match(/^(.*)\s+\((\d+)\s+\S+\)$/) || [, title, null];
+        const [, d, m, y, hh, mm] = (a.querySelector("p")?.textContent || "").match(/(\d{1,2})\.(\d{1,2})\.(\d{4})\s+(\d{1,2}):(\d{2})/) || [];
+        return {
+          id: a.getAttribute("href").split("/Results/")[1].replace(/[#?].*$/, ""),
+          url: a.getAttribute("href"),
+          listName: listName.trim(),
+          cards: cards ? Number(cards) : null,
+          date: d ? new Date(Number(y), Number(m) - 1, Number(d), Number(hh), Number(mm)).toISOString() : null,
+        };
+      });
+  }
+
+  // Name of a wants list (page title of /Magic/Wants/<id>)
+  function parseWantsListName(doc) {
+    return (doc.querySelector(".page-title-container h1, main h1")?.firstChild?.textContent || "").trim() || null;
+  }
+
+  const api = { parseEuro, ratingRank, RATINGS, parseSellerInfo, parseSellersWithMostCards, parseWizardResult, parseSellerOffers, parseWantsDetails, parseCart, parseWizardHistory, parseWantsListName };
   if (typeof module !== "undefined") module.exports = api;
   else root.WantNotMarket = api;
 })(this);

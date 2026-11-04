@@ -51,7 +51,7 @@
     el("div", {
       className: "wn-summary",
       textContent:
-        "Looks at everything the Wizard's sellers (and the sellers with the most cards) have from your list and finds the cheapest combination including shipping. Loading takes a few minutes.",
+        "Looks at everything the Wizard's sellers (from this and earlier runs on the same list, plus the sellers with the most cards) have from your list and finds the cheapest combination including shipping. Loading takes a few minutes.",
     })
   );
   const status = el("div", { className: "wn-status" });
@@ -171,6 +171,27 @@
   // Cardmarket answers 403/429 when requests come too fast: back off and retry before giving up.
   const BACKOFF_MS = [15000, 45000];
   let blockedInARow = 0;
+  const HISTORY_MAX_RUNS = 3;
+  const HISTORY_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+  async function loadWizardHistory(wantsDoc) {
+    const listName = M.parseWantsListName(wantsDoc);
+    if (!listName) return [];
+    const currentId = location.pathname.split("/Results/")[1]?.replace(/\/.*$/, "");
+    const runs = M.parseWizardHistory(await getDoc(`/${lang}/Magic/Wants/ShoppingWizard/Results`))
+      .filter((r) => r.id !== currentId && r.listName === listName)
+      .filter((r) => !r.date || Date.now() - new Date(r.date).getTime() < HISTORY_MAX_AGE_MS)
+      .slice(0, HISTORY_MAX_RUNS);
+    const out = [];
+    for (const r of runs) {
+      if (cancelled) throw new Error("Cancelled.");
+      setStatus(`Reading earlier Wizard run from ${r.date ? new Date(r.date).toLocaleString() : "?"}…`);
+      await sleep(DELAY_MS);
+      const result = M.parseWizardResult(await getDoc(r.url));
+      out.push({ id: r.id, date: r.date, cards: r.cards, total: result.total, shipments: result.shipments, sellers: result.sellers });
+    }
+    return out;
+  }
+
   async function getDoc(url) {
     for (let attempt = 0; ; attempt++) {
       const res = await pageFetch(new URL(url, location.href).href, { credentials: "include" });
@@ -221,9 +242,25 @@
     }
     if (!data.wants.length) throw new Error("Wants list is empty or not readable.");
 
-    // candidate sellers: Wizard result + sellers with the most cards
+    // Earlier Wizard runs on the same list (e.g. "reduce shipments"): more sellers at no extra Wizard run.
+    data.history = [];
+    try {
+      setStatus("Looking for earlier Wizard runs on this list…");
+      data.history = await loadWizardHistory(wantsDoc);
+    } catch (e) {
+      data.errors.push(`Earlier Wizard runs: ${e.message}`);
+    }
+
+    // candidate sellers: Wizard result + earlier runs + sellers with the most cards
     const candidates = new Map();
     for (const s of data.wizard.sellers) candidates.set(s.seller.name, { info: s.seller, sources: ["wizard"] });
+    for (const run of data.history) {
+      for (const s of run.sellers) {
+        const c = candidates.get(s.seller.name);
+        if (c) c.sources.includes("history") || c.sources.push("history");
+        else candidates.set(s.seller.name, { info: s.seller, sources: ["history"] });
+      }
+    }
     for (const s of data.sellersWithMostCards) {
       const c = candidates.get(s.name);
       if (c) c.sources.push("mostCards");
