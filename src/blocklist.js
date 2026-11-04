@@ -13,6 +13,7 @@
     { id: "assassins", label: "Assassin's Creed", patterns: ["Assassin's Creed"] },
     { id: "jurassic", label: "Jurassic World", patterns: ["Jurassic World"] },
     { id: "transformers", label: "Transformers", patterns: ["Transformers"] },
+    { id: "startrek", label: "Star Trek", patterns: ["Star Trek"] },
   ];
 
   const DEFAULT_SETTINGS = {
