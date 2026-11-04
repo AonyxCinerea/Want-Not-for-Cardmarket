@@ -89,3 +89,38 @@ test("solver: more than 25 € forces tracked shipping", { skip: !highsFactory &
   assert.equal(plan.shipping, 3.95);
   assert.equal(plan.total, 33.95);
 });
+
+test("solver: more than 8 copies of one product only from a single seller", { skip: !highsFactory && "highs not installed" }, async () => {
+  const highs = await highsFactory();
+  // 10 copies wanted. s2 is cheaper per card but has only 2; mixing would need 10 of the same product from two sellers.
+  const data = {
+    wants: [want("Dandan", { amount: 10 })],
+    shipping: { Germany: letterDE },
+    sellers: {
+      s1: { country: "Germany", info: {}, offers: [offer("1", "Dandan", 1, { available: 10, idProduct: "7605" })] },
+      s2: { country: "Germany", info: {}, offers: [offer("2", "Dandan", 0.1, { available: 2, idProduct: "7605" })] },
+    },
+    wizard: { sellers: [] },
+  };
+  const p = Model.buildProblem(data);
+  const r = highs.solve(Model.buildLp(p));
+  const plan = Model.decode(p, Object.fromEntries(Object.entries(r.Columns).map(([k, v]) => [k, v.Primal])));
+  assert.deepEqual(plan.shipments.map((s) => [s.seller, s.cards]), [["s1", 10]]);
+});
+
+test("solver: up to 8 copies may still come from different sellers", { skip: !highsFactory && "highs not installed" }, async () => {
+  const highs = await highsFactory();
+  const data = {
+    wants: [want("Dandan", { amount: 8 })],
+    shipping: { Germany: letterDE },
+    sellers: {
+      s1: { country: "Germany", info: {}, offers: [offer("1", "Dandan", 1, { available: 10, idProduct: "7605" })] },
+      s2: { country: "Germany", info: {}, offers: [offer("2", "Dandan", 0.1, { available: 4, idProduct: "7605" })] },
+    },
+    wizard: { sellers: [] },
+  };
+  const p = Model.buildProblem(data);
+  const r = highs.solve(Model.buildLp(p));
+  const plan = Model.decode(p, Object.fromEntries(Object.entries(r.Columns).map(([k, v]) => [k, v.Primal])));
+  assert.equal(plan.shipments.length, 2); // 4 cheap from s2 + 4 from s1 beats 8 from s1
+});

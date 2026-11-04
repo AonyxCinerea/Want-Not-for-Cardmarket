@@ -3,6 +3,9 @@
 (function (root) {
   const CONDITIONS = ["MT", "NM", "EX", "GD", "LP", "PL", "PO"];
   const TRACKED_ABOVE = 25; // Cardmarket: shipments worth more than this must be tracked
+  // Cardmarket: "You may not add more than 8 items of the same product to your cart from different sellers".
+  // More than 8 copies of one product are only possible from a single seller.
+  const MAX_SAME_PRODUCT_MULTI_SELLER = 8;
 
   const normName = (n) => String(n || "").replace(/\s*\(V\.\d+\)\s*$/, "").trim().toLowerCase();
 
@@ -115,6 +118,38 @@
       const vs = o.wantIdx.filter((w) => !missing.includes(wants[w])).map((w) => x(oi, w));
       if (vs.length > 1) cons.push(`stock${oi}: ${vs.join(" + ")} <= ${o.available}`);
     });
+    // same-product limit (see MAX_SAME_PRODUCT_MULTI_SELLER)
+    const products = new Map();
+    offers.forEach((o, oi) => {
+      if (!o.idProduct) return;
+      const vs = o.wantIdx.filter((w) => !missing.includes(wants[w])).map((w) => x(oi, w));
+      if (!vs.length) return;
+      if (!products.has(o.idProduct)) products.set(o.idProduct, new Map());
+      const bySeller = products.get(o.idProduct);
+      if (!bySeller.has(o.seller)) bySeller.set(o.seller, { vars: [], cap: 0 });
+      const e = bySeller.get(o.seller);
+      e.vars.push(...vs);
+      e.cap += o.available;
+    });
+    let pi = 0;
+    for (const [, bySeller] of products) {
+      const total = [...bySeller.values()].reduce((a, e) => a + e.cap, 0);
+      if (bySeller.size < 2 || total <= MAX_SAME_PRODUCT_MULTI_SELLER) continue;
+      const single = `single${pi}`;
+      bins.push(single);
+      const ys = [];
+      [...bySeller.values()].forEach((e, k) => {
+        const y = `uses${pi}_${k}`;
+        bins.push(y);
+        ys.push(y);
+        cons.push(`prodseller${pi}_${k}: ${e.vars.join(" + ")} - ${e.cap} ${y} <= 0`);
+      });
+      // single = 1: at most one seller for this product; single = 0: at most 8 copies in total
+      cons.push(`prodsingle${pi}: ${ys.join(" + ")} + ${ys.length - 1} ${single} <= ${ys.length}`);
+      cons.push(`prodmax${pi}: ${[...bySeller.values()].flatMap((e) => e.vars).join(" + ")} - ${total} ${single} <= ${MAX_SAME_PRODUCT_MULTI_SELLER}`);
+      pi++;
+    }
+
     wants.forEach((w, wi) => {
       if (missing.includes(w)) return;
       const vs = offers.map((o, oi) => (o.wantIdx.includes(wi) ? x(oi, wi) : null)).filter(Boolean);
@@ -165,7 +200,7 @@
 
   const round2 = (x) => Math.round(x * 100) / 100;
 
-  const api = { CONDITIONS, offerFits, cardsForWeight, shippingTiers, buildProblem, buildLp, decode };
+  const api = { MAX_SAME_PRODUCT_MULTI_SELLER, CONDITIONS, offerFits, cardsForWeight, shippingTiers, buildProblem, buildLp, decode };
   if (typeof module !== "undefined") module.exports = api;
   else root.WantNotModel = api;
 })(this);
