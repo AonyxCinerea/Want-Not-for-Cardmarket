@@ -58,25 +58,64 @@ The Shopping Wizard either finds the cheapest card prices or the fewest shipment
 cheapest **total**: sometimes a card that costs a little more is the better buy, because it comes from a
 seller you're ordering from anyway and saves a whole shipment.
 
-1. Run the **Shopping Wizard** on a wants list as usual.
-2. On the results page, click **Optimize incl. shipping**. Want-Not loads what the Wizard's sellers (and
-   the sellers with the most cards from your list) have, plus Cardmarket's shipping prices. This takes a
-   few minutes for big lists.
-3. Compare: the plan shows the total, the saving against the Wizard and the cards per seller.
-4. Click **Add plan to cart**. Afterwards Want-Not shows the actual total from your shopping cart.
-
 <p align="center"><img src="docs/screenshots/optimizer.png" width="720" alt="Optimizer plan compared with the Shopping Wizard"></p>
 
-Before the first use, open the settings once: choose where you live under **Ship to** and click
-**Allow shipping prices**. The optimizer reads Cardmarket's public shipping price table for that.
+### Once: settings
 
-Tip: run the Wizard on the same list once with **Reduce Price** and once with **Reduce Shipments**. The
-optimizer also reads your earlier Wizard runs on that list (from the last 7 days), so it gets the sellers
-of both and has more to choose from.
+Open the Want-Not settings (toolbar icon), choose the country you live in under **Ship to** and click
+**Allow shipping prices**. The optimizer reads Cardmarket's public shipping price table for that, and
+without it the **Optimize** button only shows a reminder.
 
-Your wants list's filters (printings, language, condition, foil) are respected, so it works together
-with the excluded expansions above. Shipping is estimated from Cardmarket's price table; the shopping
-cart always shows the final amount, and nothing is ordered until you check out yourself.
+### Every order
+
+1. Open your wants list. Want-Not remembers which list you're working on.
+2. Run the **Shopping Wizard** with **Reduce Price**. For bigger lists, run it a second time with
+   **Reduce Shipments** (see the tips below).
+3. On a results page, click **Optimize incl. shipping**. Want-Not loads what the candidate sellers have
+   from your list plus the shipping prices. Small lists take about a minute, big ones several minutes.
+4. Check the plan: total and saving at the top, one row per seller. Click "N cards" to see exactly which
+   printing, condition and language you'd get.
+5. Click **Add plan to cart**. Want-Not then reads your cart and shows the real total next to its estimate.
+6. Check out as usual. Nothing is ordered before that.
+
+### Getting the best result
+
+The optimizer can only pick from the sellers it looks at. Those are the sellers from your Wizard runs on
+this list (the current one and earlier ones from the last 7 days) and Cardmarket's "Sellers with the Most
+Cards". More good candidates usually means a cheaper plan.
+
+- **Run the Wizard twice.** "Reduce Price" brings in many cheap sellers, "Reduce Shipments" brings in the
+  big ones that have most of your list. Optimize from either results page and the optimizer uses both.
+  This matters most for lists with more than about 50 cards, because there Cardmarket often can't
+  calculate "Sellers with the Most Cards".
+- **Don't narrow the Wizard more than you need to.** Its seller location, seller type and reputation
+  filters decide which sellers the optimizer gets to see. If you only allow sellers from your own country,
+  for example, the optimizer can't find a cheaper one abroad.
+- **Keep your wants list's filters honest.** The optimizer respects every entry's printings, language,
+  minimum condition and foil setting. Each restriction you don't really need (say, English only for a
+  card you'd happily take in German) removes offers and can make the plan more expensive. Excluded
+  expansions from the first part of Want-Not are respected the same way.
+- **Optimize right after the Wizard.** Offers sell out. The optimizer loads fresh offers itself, but the
+  older a Wizard run is, the more of its sellers have sold the cards in the meantime.
+- **Start with an empty cart.** Items already in the cart stay there. Want-Not warns you about them, but
+  the "real total" it shows afterwards then includes those items too.
+- **Leave the shipping method as it is.** The plan assumes the cheapest allowed method for each seller.
+  Above 25 € Cardmarket requires tracked shipping, and some sellers only ship tracked; both are already
+  part of the plan.
+- **Give Cardmarket a break.** Every optimization loads dozens of pages, and the Wizard itself has a daily
+  limit. Optimizing one list now and then is fine; many lists in a row can get you temporarily blocked.
+
+### Good to know
+
+- Shipping is estimated from Cardmarket's public price table. In a few countries the table is missing a
+  cheaper option, so the estimate is a bit too high rather than too low. The cart always shows the final
+  amount.
+- Cardmarket doesn't allow more than 8 copies of the same card from different sellers. For larger
+  quantities the optimizer takes all copies from one seller.
+- If the Wizard's result is already the cheapest, the optimizer says so and doesn't offer to change your
+  cart.
+- Something looks wrong? Click **Debug: download data** under the plan and attach the file to an
+  [issue](../../issues). It contains your wants list and the sellers' offers, but no login data.
 
 ## FAQ
 
@@ -108,16 +147,6 @@ own risk, and don't run the optimizer on many lists in a row.
 **How much does the optimizer save?**
 It depends on the list. In our tests it was 7–22% cheaper than the Shopping Wizard's "cheapest" result,
 almost entirely through fewer shipments. If the Wizard's result is already the cheapest, it says so.
-
-**Does the optimizer run the Shopping Wizard?**
-No, it works with the result of a Wizard run you started yourself. Note that Cardmarket limits how often
-you can run the Wizard per day; if you run it many times in a row, it is blocked until the next day.
-
-**Why does the optimizer only look at some sellers?**
-Loading every seller's offers would take hours and many thousands of requests. Want-Not looks at the
-sellers the Wizard picked (in this run and your earlier runs on the same list) and the sellers with the
-most cards from your list. For very large lists,
-Cardmarket sometimes can't compute the second list; the optimizer then works with the Wizard's sellers.
 
 **What data does it collect?**
 None. See the [privacy policy](PRIVACY.md).
