@@ -60,6 +60,12 @@ seller you're ordering from anyway and saves a whole shipment.
 
 <p align="center"><img src="docs/screenshots/optimizer.png" width="720" alt="Optimizer plan compared with the Shopping Wizard"></p>
 
+> [!IMPORTANT]
+> **The optimizer only works with Cardmarket in English.** Before you run the Shopping Wizard, switch
+> Cardmarket to English (language menu, or change `/de/`, `/fr/` … to `/en/` in the address bar). In other
+> languages the optimizer can't read shipping countries and wants-list settings, and it fails or gives a
+> wrong plan.
+
 ### Once: settings
 
 Open the Want-Not settings (toolbar icon), choose the country you live in under **Ship to** and click
@@ -68,7 +74,7 @@ without it the **Optimize** button only shows a reminder.
 
 ### Every order
 
-1. Open your wants list. Want-Not remembers which list you're working on.
+1. Open your wants list with Cardmarket set to English. Want-Not remembers which list you're working on.
 2. Run the **Shopping Wizard** with **Reduce Price**. For bigger lists, run it a second time with
    **Reduce Shipments** (see the tips below).
 3. On a results page, click **Optimize incl. shipping**. Want-Not loads what the candidate sellers have
