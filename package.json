@@ -7,7 +7,7 @@
     "vendor": "node scripts/vendor-highs.js"
   },
   "devDependencies": {
-    "jsdom": "^31.0.0",
+    "jsdom": "^31.0.1",
     "highs": "1.15.4"
   }
 }
